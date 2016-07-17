@@ -5,6 +5,7 @@ import net.sf.json.JSONObject;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.DB;
 import utils.DBHelper;
 
 /**
@@ -13,11 +14,7 @@ import utils.DBHelper;
  */
 class Receiver {
     static final Logger logger = LoggerFactory.getLogger(Receiver.class);
-    public static DBHelper db;
     private int cnt = 0;
-    static {
-        db = new DBHelper();
-    }
     public void handleMessage(String slog) {
         cnt++;
         logger.info("receive "+cnt+":{}", slog);
@@ -38,19 +35,8 @@ class Receiver {
                     "modtrans, content) values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')", level, deviceId,
                     memberId, logTime, sDate, ip, module, content);
             logger.info("Executing sql: "+insert);
-            db.executeSQL(insert);
-            insert = String.format("insert into `stat_module` (level, device_id, member_id, time, module) " +
-                    "values ('%s', '%s', '%s', '%s', '%s')", level, deviceId, memberId, sDate, module);
-            logger.info("Executing sql: "+insert);
-            db.executeSQL(insert);
-            if (module.equals("FrontEnd")){
-                JSONObject json = JSONObject.fromObject(content);
-                String version = json.getString("version");
-                insert = String.format("insert into `stat_version` (level, device_id, member_id, time, version) " +
-                        "values ('%s', '%s', '%s', '%s', '%s')", level, deviceId, memberId, sDate, version);
-                db.executeSQL(insert);
-            }
 
+            DB.getDB().executeSQL(insert);
         } catch (Exception ex) {
             logger.error("log:" + slog + "throws:", ex);
         }

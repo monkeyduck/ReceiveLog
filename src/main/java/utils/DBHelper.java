@@ -1,9 +1,11 @@
 package utils;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 
 /**
@@ -43,8 +45,6 @@ public class DBHelper {
         } catch (Exception ex) {
             logger.error(ex.getMessage());
             ex.printStackTrace();
-            closeAll();
-            conn = null;
         }
     }
 
@@ -55,8 +55,6 @@ public class DBHelper {
             }catch (Exception e){
                 logger.error(e.getMessage());
                 System.out.println(e.getMessage());
-                closeAll();
-                conn = null;
             }
         }
         return conn;
@@ -67,13 +65,17 @@ public class DBHelper {
         try {
             conn = this.getConnection();
             stmt = conn.createStatement();
+            String no_splash = "SET @old_sql_mode=@@sql_mode";
+            stmt.execute(no_splash);
+            no_splash="SET @@sql_mode=CONCAT_WS(',', @@sql_mode, 'NO_BACKSLASH_ESCAPES')";
+            stmt.execute(no_splash);
             stmt.execute(sql);
+            no_splash = "SET @@sql_mode=@old_sql_mode";
+            stmt.execute(no_splash);
 
         } catch (Exception ex) {
             logger.error(ex.getMessage());
             ex.printStackTrace();
-            closeAll();
-            conn = null;
         }
     }
 
@@ -84,7 +86,6 @@ public class DBHelper {
             rs = stmt.executeQuery(sql);
         }catch (SQLException e){
             logger.error(e.getMessage());
-            closeAll();
             e.printStackTrace();
         }
         return rs;
@@ -116,7 +117,15 @@ public class DBHelper {
         executeSQL(createIndex);
     }
 
-
+    public void insertUsedTime(String memberId, String timeStamp, String module, String usedTime){
+        long ts = Long.parseLong(timeStamp);
+        DateTime dt = new DateTime(ts);
+        String sDate = dt.toString("yyyy-MM-dd HH:mm:ss");
+        String sql = String.format("insert into stat_module (member_id, time, module, usedTime) values " +
+                "('%s', '%s', '%s', '%s')",memberId, sDate, module, usedTime);
+        executeSQL(sql);
+        logger.info("Inserted into stat_module: "+sql);
+    }
     public void closeAll() {
         try{
             conn.close();

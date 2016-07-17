@@ -6,6 +6,8 @@ import net.sf.json.JSONObject;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.DB;
+import utils.DBHelper;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -33,7 +35,6 @@ public class NormalLog {
         logger.info("Parsing log :"+log);
         JSONObject json = JSONObject.fromObject(log);
         level = ELevelType.fromString(json.getString("level"));
-        content = processContent(replaceNull(json.getString("content")));//处理下有fromTime和toTime的状态
         memberId = replaceNull(json.getString("memberId"));
         module = replaceNull(json.getString("module"));
         ip = replaceNull(json.getString("ip"));
@@ -41,10 +42,9 @@ public class NormalLog {
         String environment = replaceNull(json.getString("environment"));
         timeStamp = replaceNull(json.getString("timeStamp"));
         envType = EnvironmentType.fromString(environment);
-        if (module.equals("") || memberId.equals("") || timeStamp.equals("") || deviceId.equals("")) {
-            String message = "module, memberId, deviceId and timeStamp should have value";
-            throw new Exception(message);
-        }
+        //处理下有fromTime和toTime的状态
+        content = processContent(memberId, timeStamp, module,(json.getString("content")));
+
     }
 
     public String getContent() {
@@ -83,7 +83,12 @@ public class NormalLog {
         return st == null ? "" : st;
     }
 
-    static private String processContent(String content) {
+    static private String processContent(String memberId, String timeStamp, String module, String content)
+            throws Exception{
+        if (module.equals("") || memberId.equals("") || timeStamp.equals("")) {
+            String message = "module, memberId and timeStamp should have value";
+            throw new Exception(message);
+        }
         JSONObject jsonObject = JSONObject.fromObject(content);
         HashMap<String, String> dic = new HashMap<>();
         Iterator it = jsonObject.keys();
@@ -116,7 +121,10 @@ public class NormalLog {
         }
         if ((fromTime > 0) && (toTime > 0)) {
             dic.put("usedTime", (toTime - fromTime) + "");
+            String usedTime = ((toTime-fromTime)+"");
+            DB.getDB().insertUsedTime(memberId,timeStamp,module,usedTime);
         }
+
         return JSONObject.fromObject(dic).toString();
     }
 }
