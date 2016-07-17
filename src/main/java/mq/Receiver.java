@@ -31,7 +31,7 @@ class Receiver {
             String ip = log.getIp();
             String module = log.getModule();
             String content = log.getContent();
-            String insert = String.format("insert into `cachetoday` (level, device_id, member_id, log_time, time, ip, " +
+            String insert = String.format("insert into `cachehour` (level, device_id, member_id, log_time, time, ip, " +
                     "modtrans, content) values ('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')", level, deviceId,
                     memberId, logTime, sDate, ip, module, content);
             logger.info("Executing sql: "+insert);
