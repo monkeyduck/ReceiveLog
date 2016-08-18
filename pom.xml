@@ -46,6 +46,11 @@
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.31</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -56,6 +61,8 @@
                 <includes>
                     <include>log4j.properties</include>
                     <include>amqpconf.properties</include>
+                    <include>indoors.txt</include>
+                    <include>innerTest.txt</include>
                 </includes>
             </resource>
         </resources>

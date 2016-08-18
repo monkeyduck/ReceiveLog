@@ -19,7 +19,7 @@ public class DBHelper {
     private static final String name;
 
     static {
-        url = "jdbc:mysql://123.56.237.250:3306/aibasis_stat?useSSL=false&useUnicode=true&characterEncoding=UTF-8";
+        url = "jdbc:mysql://rdsu1u8uau8193m7j1b7.mysql.rds.aliyuncs.com:3306/aibasis_stat?useSSL=false&useUnicode=true&characterEncoding=UTF-8";
         user = "aibasis";
         password = "Wenjin1411";
         name = "com.mysql.jdbc.Driver";
@@ -61,22 +61,17 @@ public class DBHelper {
     }
 
 
-    public void executeSQL(String sql) {
-        try {
-            conn = this.getConnection();
-            stmt = conn.createStatement();
-            String no_splash = "SET @old_sql_mode=@@sql_mode";
-            stmt.execute(no_splash);
-            no_splash="SET @@sql_mode=CONCAT_WS(',', @@sql_mode, 'NO_BACKSLASH_ESCAPES')";
-            stmt.execute(no_splash);
-            stmt.execute(sql);
-            no_splash = "SET @@sql_mode=@old_sql_mode";
-            stmt.execute(no_splash);
+    public void executeSQL(String sql) throws SQLException{
+        conn = this.getConnection();
+        stmt = conn.createStatement();
+        String no_splash = "SET @old_sql_mode=@@sql_mode";
+        stmt.execute(no_splash);
+        no_splash="SET @@sql_mode=CONCAT_WS(',', @@sql_mode, 'NO_BACKSLASH_ESCAPES')";
+        stmt.execute(no_splash);
+        stmt.execute(sql);
+        no_splash = "SET @@sql_mode=@old_sql_mode";
+        stmt.execute(no_splash);
 
-        } catch (Exception ex) {
-            logger.error(ex.getMessage());
-            ex.printStackTrace();
-        }
     }
 
     public ResultSet executeQuery(String sql){
@@ -91,41 +86,6 @@ public class DBHelper {
         return rs;
     }
 
-    public void createTable(String tableName){
-        Utils.setExistedDate(tableName);
-        tableName = "RealTimeLog"+String.join("", tableName.split("-"));
-        String drop = "DROP TABLE IF EXISTS`" + tableName + "`";
-        executeSQL(drop);
-        String sql = "CREATE TABLE `" + tableName + "` (\n" +
-                "  `id` int(11) NOT NULL AUTO_INCREMENT,\n" +
-                "  `log_source` varchar(20) DEFAULT NULL,\n" +
-                "  `log_time` bigint(20) DEFAULT NULL,\n" +
-                "  `log_topic` varchar(50) DEFAULT NULL,\n" +
-                "  `time` datetime DEFAULT NULL,\n" +
-                "  `device_id` varchar(50) DEFAULT NULL,\n" +
-                "  `ip` varchar(20) DEFAULT NULL,\n" +
-                "  `member_id` varchar(50) DEFAULT NULL,\n" +
-                "  `log_level` varchar(10) DEFAULT NULL,\n" +
-                "  `modtrans` varchar(50) DEFAULT NULL,\n" +
-                "  `content` text,\n" +
-                "  PRIMARY KEY (`id`)\n" +
-                ") ENGINE=InnoDB DEFAULT CHARSET=utf8;";
-        executeSQL(sql);
-        String createIndex = "create index memberIndex on "+tableName+" (member_id)";
-        executeSQL(createIndex);
-        createIndex = "create index deviceIndex on "+tableName+" (device_id)";
-        executeSQL(createIndex);
-    }
-
-    public void insertUsedTime(String memberId, String timeStamp, String module, String usedTime){
-        long ts = Long.parseLong(timeStamp);
-        DateTime dt = new DateTime(ts);
-        String sDate = dt.toString("yyyy-MM-dd HH:mm:ss");
-        String sql = String.format("insert into stat_module (member_id, time, module, usedTime) values " +
-                "('%s', '%s', '%s', '%s')",memberId, sDate, module, usedTime);
-        executeSQL(sql);
-        logger.info("Inserted into stat_module: "+sql);
-    }
     public void closeAll() {
         try{
             conn.close();
