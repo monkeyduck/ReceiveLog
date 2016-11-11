@@ -1,19 +1,15 @@
 package mq;
 
-
+import com.halfhuman.service.IInteractContextSender;
+import llc.model.ModuleUse;
+import llc.service.ServiceHelper;
 import mq.Enums.EnvironmentType;
-import net.sf.json.JSONObject;
-import org.apache.commons.io.FileUtils;
+import utils.Cons;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import utils.DB;
-import utils.DBHelper;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import static com.halfhuman.entry.InteractContextFactory.getIcFetcher;
 
 /**
  * 接受log
@@ -21,76 +17,67 @@ import java.util.List;
  */
 class Receiver {
     static final Logger logger = LoggerFactory.getLogger(Receiver.class);
-    private static List<String> cacheLogList = new ArrayList<String>();
 
     public void handleMessage(String slog) {
-        logger.info("receive "+":{}", slog);
-        int maxSize = 99;
+        logger.info("receive " + ":{}", slog);
         NormalLog log;
         try {
             log = new NormalLog(slog);
-            EnvironmentType envType = log.getEnvType();
-            if (!log.getModule().equals("FrontEnd")){
-                if (envType.equals(EnvironmentType.Online) || envType.equals(EnvironmentType.Release)){
-                    String level = log.getLevel().toString();
-                    String memberId = log.getMemberId();
-                    String deviceId = log.getDeviceId();
-                    String logTime = log.getTimeStamp();
-                    DateTime dateTime = new DateTime(Long.parseLong(logTime));
-                    String sDate = dateTime.toString("yyyy-MM-dd HH:mm:ss");
-                    String ip = log.getIp();
-                    String module = log.getModule();
-                    String content = log.getContent();
-                    // 单引号特殊处理
-                    content = content.replaceAll("'","''");
-                    cacheLogList.add(String.format("('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'),", level, deviceId,
-                            memberId, logTime, sDate, ip, module, content));
-                    if (cacheLogList.size()>maxSize){
-                        String insert = "insert into `cachehour` (level, device_id, member_id, log_time, time, ip, " +
-                                "modtrans, content) values ";
-                        for (String cachelog: cacheLogList){
-                            insert += cachelog;
-                        }
-                        cacheLogList.clear();
-                        insert = insert.substring(0,insert.length()-1);
-                        logger.info("Start to execute sql: "+insert);
-                        DB.getDB().executeSQL(insert);
-                        logger.info("Insert into cachehour successfully");
-                    }
-                }
-                else if (log.containUsedTime()){
-                    String usedTime = log.getUsedTime();
-                    if (!usedTime.equals("0")){
-                        String env = envType.name().toLowerCase();
-                        String tableName = env+"_stat_module";
-                        String memberId = log.getMemberId();
-                        String logTime = log.getTimeStamp();
-                        DateTime dateTime = new DateTime(Long.parseLong(logTime));
-                        String sDate = dateTime.toString("yyyy-MM-dd HH:mm:ss");
-                        String module = log.getModule();
-                        String content = log.getContent();
-                        String insert = String.format("insert into %s (member_id, time, module, usedTime, content) values " +
-                                "('%s', '%s', '%s', '%s', '%s')", tableName, memberId, sDate, module, usedTime, content);
-                        DB.getDB().executeSQL(insert);
-                        logger.info("Insert into "+tableName+" successfully");
-                    }
+        }catch (Exception e){
+            logger.error("Parse log error: " + e.getMessage());
+            return;
+        }
+        EnvironmentType envType = log.getEnvType();
+        String modTrans = log.getModtrans();
+        if (envType.name().toLowerCase().equals("alpha")){
+            if (modTrans.contains("->")){   //给宇骁上下文服务器
+                IInteractContextSender icsender = getIcFetcher();
+                boolean res = icsender.recordToContext(slog);
+                logger.info("上下文服务器发送结果 "+res);
+            }
+        }
+        else if (envType.equals(EnvironmentType.Online) || envType.equals(EnvironmentType.Release)) {
+            if (!modTrans.equals("FrontEnd")) {
+                try {
+                    ServiceHelper.getUserService().insertHourCache(log);
+                } catch (Exception e) {
+                    logger.error("Error occurs! throws: " + e.getMessage());
                 }
             }
-
-        } catch (Exception ex) {
-            logger.error("Insert error!! Throws:" + ex.getMessage());
         }
-
+        if (log.containMethodName() && !modTrans.equals("FrontEnd")) {
+            String methodName = log.getMethodName();
+            if (!methodName.equals("") &&
+                    !Cons.uselessMethod.contains(methodName)){
+                String usedTime = log.getUsedTime();
+                String env = envType.name().toLowerCase();
+                String tableName;
+                if (env.equals("online") || env.equals("release")){
+                    tableName = "stat_module";
+                }else{
+                    tableName = env + "_stat_module";
+                }
+                String memberId = log.getMember_id();
+                String logTime = log.getLog_time();
+                DateTime dateTime = new DateTime(Long.parseLong(logTime));
+                String sDate = dateTime.toString("yyyy-MM-dd HH:mm:ss");
+                String module = log.getModtrans();
+                String content = log.getContent();
+                ModuleUse moduleUse = new ModuleUse(memberId, sDate, module, usedTime, content);
+                try{
+                    if (env.equals("alpha")) {
+                        ServiceHelper.getUserService().insertUsedTime_alpha(moduleUse);
+                    } else if(env.equals("beta")){
+                        ServiceHelper.getUserService().insertUsedTime_beta(moduleUse);
+                    }else{
+                        ServiceHelper.getUserService().insertUsedTime(moduleUse);
+                    }
+                    logger.info("Insert into " + tableName + " successfully");
+                }catch (Exception e){
+                    logger.error("Insert error: " + e.getMessage());
+                }
+            }
+        }
     }
 
-    public static void clearCacheList(){
-        cacheLogList.clear();
-    }
-
-    public static void main(String args[]){
-        String cont = "'wozuohao'";
-        System.out.println(cont);
-        cont = cont.replaceAll("'","'''");
-        System.out.println(cont);
-    }
 }

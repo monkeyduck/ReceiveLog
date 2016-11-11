@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="llc.dao.UserDao">
+
+    <sql id="LogItems" >
+        log_time,time,device_id,ip, member_id,level,modtrans,content
+    </sql>
+
+    <sql id="MemberItems" >
+        device_id,member_id,version,member_type,birthday,gender,signup_time
+    </sql>
+
+    <sql id="UserItems">
+        member_id, device_id, nick_name, real_name, gender, birthday, signup_time, face_id, member_type
+    </sql>
+
+    <sql id="FirstUseItems">
+        member_id, device_id, first_use_date, first_use_time, gender, birthday, signup_time, member_type, version,
+        log_time
+    </sql>
+
+    <insert id="insertHourCache" useGeneratedKeys="true" parameterType="mq.NormalLog" keyProperty="id">
+        insert into cachehour (level,device_id,member_id,log_time,time,ip,modtrans,content) values
+            (#{level},#{device_id},#{member_id},#{log_time},#{time},#{ip},#{modtrans},#{content})
+    </insert>
+    <insert id="insertUsedTime" parameterType="llc.model.ModuleUse" useGeneratedKeys="true" keyProperty="id">
+        insert into stat_module (member_id, time, module, usedTime, content, date, methodName) VALUES
+        (#{member_id},#{time},#{module},#{usedTime},#{content},#{date}, #{methodName})
+    </insert>
+
+    <insert id="insertUsedTime_alpha" parameterType="llc.model.ModuleUse" useGeneratedKeys="true" keyProperty="id">
+        insert into alpha_stat_module (member_id, time, module, usedTime, content, date, methodName) VALUES
+        (#{member_id},#{time},#{module},#{usedTime},#{content},#{date}, #{methodName})
+    </insert>
+
+    <insert id="insertUsedTime_beta" parameterType="llc.model.ModuleUse" useGeneratedKeys="true" keyProperty="id">
+        insert into beta_stat_module (member_id, time, module, usedTime, content, date, methodName) VALUES
+        (#{member_id},#{time},#{module},#{usedTime},#{content}, #{date}, #{methodName})
+    </insert>
+
+
+</mapper>

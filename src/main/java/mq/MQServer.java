@@ -2,7 +2,10 @@ package mq;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Exchange;
+import org.springframework.amqp.core.FanoutExchange;
+import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
@@ -23,12 +26,14 @@ public class MQServer {
     static final Logger logger = LoggerFactory.getLogger(MQServer.class);
     private CachingConnectionFactory cf;
     private RabbitAdmin admin;
+    private final static int threadSize = 10;
 
     public MQServer() {
         cf = new CachingConnectionFactory(serverIP);
         cf.setUsername(userName);
         cf.setPassword(passWord);
         cf.setVirtualHost(virtualHost);
+        cf.setChannelCacheSize(threadSize);
         admin = new RabbitAdmin(cf);
     }
 
@@ -46,6 +51,7 @@ public class MQServer {
         MessageListenerAdapter adapter = new MessageListenerAdapter(listener);
         container.setMessageListener(adapter);
         container.setQueueNames(queueName);
+        container.setConcurrentConsumers(threadSize);
         logger.info("Start mq with queueName: "+queueName);
         container.start();
     }
