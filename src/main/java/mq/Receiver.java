@@ -31,9 +31,14 @@ class Receiver {
         String modTrans = log.getModtrans();
         if (envType.name().toLowerCase().equals("alpha")){
             if (modTrans.contains("->")){   //给宇骁上下文服务器
-                IInteractContextSender icsender = getIcFetcher();
-                boolean res = icsender.recordToContext(slog);
-                logger.info("上下文服务器发送结果 "+res);
+                try{
+                    IInteractContextSender icsender = getIcFetcher();
+                    boolean res = icsender.recordToContext(slog);
+                    logger.info("上下文服务器发送结果 "+res);
+                }catch (Exception e){
+                    logger.error("上下文发送失败, 原因:" + e.getMessage());
+                }
+
             }
         }
         else if (envType.equals(EnvironmentType.Online) || envType.equals(EnvironmentType.Release)) {
