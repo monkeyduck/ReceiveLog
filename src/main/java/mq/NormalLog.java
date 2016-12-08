@@ -142,8 +142,7 @@ public class NormalLog {
         if (containMethodName()){
             JSONObject json = JSONObject.fromObject(content);
             String methodName = json.getString("methodName");
-            return (methodName.equals("usedTime") || methodName.equals("playedMedia"))
-                    && !modtrans.equals("FrontEnd");
+            return methodName.equals("usedTime") && !modtrans.equals("FrontEnd");
         }
         return false;
     }
