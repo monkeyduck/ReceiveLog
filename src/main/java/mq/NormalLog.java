@@ -141,7 +141,9 @@ public class NormalLog {
     public boolean containUsedTime(){
         if (containMethodName()){
             JSONObject json = JSONObject.fromObject(content);
-            return json.getString("methodName").equals("usedTime") && !modtrans.equals("FrontEnd");
+            String methodName = json.getString("methodName");
+            return (methodName.equals("usedTime") || methodName.equals("playedMedia"))
+                    && !modtrans.equals("FrontEnd");
         }
         return false;
     }
