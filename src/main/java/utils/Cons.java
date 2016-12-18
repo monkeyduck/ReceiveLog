@@ -29,5 +29,7 @@ public class Cons {
         uselessMethod.add("exit");
         uselessMethod.add("dialogTopicCall");
         uselessMethod.add("pictureCall");
+        uselessMethod.add("pushGrowUpNotification");
+        uselessMethod.add("sendGrowUpLog");
     }
 }
