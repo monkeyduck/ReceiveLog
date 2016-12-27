@@ -4,10 +4,10 @@ import com.halfhuman.service.IInteractContextSender;
 import llc.model.ModuleUse;
 import llc.service.ServiceHelper;
 import mq.Enums.EnvironmentType;
-import utils.Cons;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.Cons;
 
 import static com.halfhuman.entry.InteractContextFactory.getIcFetcher;
 
@@ -19,7 +19,7 @@ class Receiver {
     static final Logger logger = LoggerFactory.getLogger(Receiver.class);
 
     public void handleMessage(String slog) {
-        logger.info("receive " + ":{}", slog);
+        logger.info("receive log: " + slog);
         NormalLog log;
         try {
             log = new NormalLog(slog);
