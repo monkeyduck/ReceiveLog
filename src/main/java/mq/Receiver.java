@@ -1,5 +1,6 @@
 package mq;
 
+import com.halfhuman.entry.InteractContextFactory;
 import com.halfhuman.service.IInteractContextSender;
 import llc.model.ModuleUse;
 import llc.service.ServiceHelper;
@@ -29,9 +30,10 @@ class Receiver {
         }
         EnvironmentType envType = log.getEnvType();
         String modTrans = log.getModtrans();
-        if (envType.name().toLowerCase().equals("alpha")){
+        if (envType.name().toLowerCase().equals("alpha") || envType.name().toLowerCase().equals("beta")){
             if (modTrans.contains("->")){   //给宇骁上下文服务器
                 try{
+                    InteractContextFactory.setVersion(envType.name().toLowerCase());
                     IInteractContextSender icsender = getIcFetcher();
                     boolean res = icsender.recordToContext(slog);
                     logger.info("上下文服务器发送结果 "+res);
