@@ -30,7 +30,7 @@ class Receiver {
         }
         EnvironmentType envType = log.getEnvType();
         String modTrans = log.getModtrans();
-        if (envType.name().toLowerCase().equals("alpha") || envType.name().toLowerCase().equals("beta")){
+        if (envType.name().toLowerCase().equals("alpha") || envType.name().toLowerCase().equals("release")){
             if (modTrans.contains("->")){   //给宇骁上下文服务器
                 try{
                     InteractContextFactory.setVersion(envType.name().toLowerCase());
@@ -43,7 +43,7 @@ class Receiver {
 
             }
         }
-        else if (envType.equals(EnvironmentType.Online) || envType.equals(EnvironmentType.Release)) {
+        if (envType.equals(EnvironmentType.Online) || envType.equals(EnvironmentType.Release)) {
             if (!modTrans.equals("FrontEnd")) {
                 try {
                     ServiceHelper.getUserService().insertHourCache(log);
