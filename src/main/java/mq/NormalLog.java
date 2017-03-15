@@ -23,6 +23,8 @@ public class NormalLog {
     private String time;
     private String log_time;
     private String level;
+    private JSONObject jsonObject;
+
 
     public NormalLog(String log) throws Exception {
         JSONObject json = JSONObject.fromObject(log);
@@ -34,20 +36,10 @@ public class NormalLog {
         String environment = replaceNull(json.getString("environment"));
         log_time = replaceNull(json.getString("timeStamp"));
         DateTime dt = new DateTime(Long.parseLong(log_time));
-        time = dt.toString("yyyy-MM-dd HH:mm:ss");
+        time = dt.toString("yyyy-MM-dd HH:mm:ss.SSS");
         envType = EnvironmentType.fromString(environment);
         content = json.getString("content");
-    }
-
-    public NormalLog() {
-        this.content = "a";
-        this.member_id = "test";
-        this.device_id = "test";
-        this.modtrans = "dialog";
-        this.ip = "123.456.788.123";
-        this.time = "2016-09-18 09:21:12";
-        this.log_time = "1234";
-        this.level = "INFO";
+        jsonObject = JSONObject.fromObject(content);
     }
 
     public String getTime(){
@@ -129,15 +121,6 @@ public class NormalLog {
         return st == null ? "" : st;
     }
 
-    static private String processContent(String memberId, String timeStamp, String module, String content)
-            throws Exception{
-        if (module.equals("") || memberId.equals("") || timeStamp.equals("")) {
-            String message = "module, memberId and timeStamp should have value";
-            throw new Exception(message);
-        }
-        return content;
-    }
-
     public boolean containUsedTime(){
         if (containMethodName()){
             JSONObject json = JSONObject.fromObject(content);
@@ -185,4 +168,106 @@ public class NormalLog {
         }
         return "0";
     }
+
+    static private String processContent(String memberId, String timeStamp, String module, String content)
+            throws Exception{
+        if (module.equals("") || memberId.equals("") || timeStamp.equals("")) {
+            String message = "module, memberId and timeStamp should have value";
+            throw new Exception(message);
+        }
+        return content;
+    }
+
+    public boolean belongsToSimple(){
+        if (!this.getContentText().equals(""))
+            return true;
+        else
+            return false;
+    }
+
+    public String getContentText(){
+        if (content.contains("nonFirstStart")){
+            return "nonFirstStart  "+this.jsonObject.getString("sendModule");
+        }
+        else if (content.contains("sendContent")){
+            return this.jsonObject.getString("sendContent")+" "+jsonObject.getString("sendType");
+        }
+        else if (content.contains("replyContent")){
+            return this.jsonObject.getString("replyContent") + " " + jsonObject.getString("replyType");
+        }
+        else return "";
+    }
+
+    public String getShortMem(){
+        if (this.member_id.contains(".")) {
+            String[] segs = member_id.split("\\.");
+            return segs[1];
+        }
+        else
+            return member_id;
+    }
+
+    public String getVersion(){
+        if (content.contains("version")){
+            return this.jsonObject.getString("version");
+        }
+        else if (content.contains("softwareVersion")){
+            return this.jsonObject.getString("softwareVersion");
+        }
+        else{
+            return "";
+        }
+    }
+
+    public String getAudioRecordID(){
+        if (this.content.contains("audioRecordId"))
+            return this.jsonObject.getString("audioRecordId");
+        else
+            return "";
+    }
+
+    public String getRecordLink(){
+        String record_id = getAudioRecordID();
+        if (!record_id.equals("")){
+            return "<a href=\"http://record-resource.oss-cn-beijing.aliyuncs.com/"+this.member_id+"/"+record_id+
+                    "\">录音链接</a>";
+        }
+        else
+            return "";
+
+    }
+
+    public String toSimpleLog(){
+        String re;
+        if (!getRecordLink().equals("")){
+            re = time+"&nbsp;&nbsp;&nbsp;&nbsp;"+level+"&nbsp;&nbsp;&nbsp;&nbsp;"+modtrans.replaceAll(">","&gt;")
+                    +"&nbsp;&nbsp;&nbsp;&nbsp;"+getContentText()+"&nbsp;&nbsp;&nbsp;&nbsp;"+getRecordLink()
+                    +"&nbsp;&nbsp;&nbsp;&nbsp;"+getShortMem()+"&nbsp;&nbsp;&nbsp;&nbsp;"+getVersion();
+        }
+        else{
+            re=time+"&nbsp;&nbsp;&nbsp;&nbsp;"+level+"&nbsp;&nbsp;&nbsp;&nbsp;"+modtrans.replaceAll(">","&gt;")
+                    +"&nbsp;&nbsp;&nbsp;&nbsp;"+getContentText()+"&nbsp;&nbsp;&nbsp;&nbsp;"+getShortMem()
+                    +"&nbsp;&nbsp;&nbsp;&nbsp;"
+                    +getVersion();
+        }
+        return re;
+    }
+
+    public String toReadableSimpleLog(){
+        String re;
+        if (!getRecordLink().equals("")){
+            re = time+"\t"+level+"\t"+modtrans+"\t"+getContentText()+"\t"+getRecordLink()
+                    +"\t"+getShortMem()+"\t"+getVersion();
+        }
+        else{
+            re=time+"\t"+level+"\t"+modtrans+"\t"+getContentText()+"\t"+getShortMem()
+                    +"\t"+getVersion();
+        }
+        return re;
+    }
+
+    public boolean isTrans() {
+        return modtrans.contains("->");
+    }
+
 }

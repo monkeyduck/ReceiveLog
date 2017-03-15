@@ -19,8 +19,7 @@ import static com.halfhuman.entry.InteractContextFactory.getIcFetcher;
 class Receiver {
     static final Logger logger = LoggerFactory.getLogger(Receiver.class);
 
-    public void handleMessage(String slog) {
-        logger.info("receive log: " + slog);
+    public static void handleMessage(String slog) {
         NormalLog log;
         try {
             log = new NormalLog(slog);
@@ -30,14 +29,17 @@ class Receiver {
         }
         EnvironmentType envType = log.getEnvType();
         String modTrans = log.getModtrans();
-        if (envType.name().toLowerCase().equals("alpha") || envType.name().toLowerCase().equals("release")){
+        if (envType.name().toLowerCase().equals("alpha")
+                || envType.name().toLowerCase().equals("release")){
             if (modTrans.contains("->")){   //给宇骁上下文服务器
                 try{
                     InteractContextFactory.setVersion(envType.name().toLowerCase());
                     IInteractContextSender icsender = getIcFetcher();
                     boolean res = icsender.recordToContext(slog);
+                    logger.info("上下文发送内容: " + slog);
                     logger.info("上下文服务器发送结果 "+res);
                 }catch (Exception e){
+                    e.printStackTrace();
                     logger.error("上下文发送失败, 原因:" + e.getMessage());
                 }
 

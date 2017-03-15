@@ -6,7 +6,7 @@ package llc.model;
 public class Record {
     private String member_id;
     private String device_id;
-    private String modtrans;
+    private String module;
     private String time;
     private String content;
 
@@ -26,12 +26,12 @@ public class Record {
         this.member_id = member_id;
     }
 
-    public String getModtrans() {
-        return modtrans;
+    public String getModule() {
+        return module;
     }
 
-    public void setModtrans(String modtrans) {
-        this.modtrans = modtrans;
+    public void setModule(String module) {
+        this.module = module;
     }
 
     public String getTime() {

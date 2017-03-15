@@ -109,7 +109,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>mq.runReceiver</mainClass>
+                            <mainClass>mq.runNewReceiver</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
