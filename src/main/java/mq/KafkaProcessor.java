@@ -24,20 +24,20 @@ public class KafkaProcessor {
     // Kafka消费者订阅的主题,不同模块使用是相同的
     private final static String topic = "aibasisStats";
     // Kafka
-    private final static String groupId = "firstStatConsumer";
+    private final static String groupId = "ReceiveConsumer";
     // logger
     static final Logger logger = LoggerFactory.getLogger(KafkaProcessor.class);
 
-    public KafkaProcessor() {
+    public KafkaProcessor(String env) {
         Properties props = new Properties();
         props.put("zookeeper.connect", zookeeper);
-        props.put("group.id", groupId);
+        props.put("group.id", env + groupId);
         props.put("zookeeper.session.timeout.ms", "500");
         props.put("zookeeper.sync.time.ms", "250");
         props.put("auto.commit.interval.ms", "1000");
         consumer = Consumer.createJavaConsumerConnector(new ConsumerConfig(props));
     }
-    public void process() {
+    public void process(String env) {
         Map<String, Integer> topicCount = new HashMap<>();
         topicCount.put(topic, 1);
         Map<String, List<KafkaStream<byte[], byte[]>>> consumerStreams = consumer.createMessageStreams(topicCount);
@@ -47,7 +47,7 @@ public class KafkaProcessor {
             while (it.hasNext()) {
                 String message = new String(it.next().message());
                 logger.info("Message from Kafka: " + message);
-                Receiver.handleMessage(message);
+                Receiver.handleMessage(message, env);
             }
         }
         if (consumer != null) {
@@ -56,8 +56,8 @@ public class KafkaProcessor {
     }
 
     public static void main(String[] args) {
-        KafkaProcessor simpleHLConsumer = new KafkaProcessor();
-        simpleHLConsumer.process();
+        KafkaProcessor simpleHLConsumer = new KafkaProcessor("alpha");
+        simpleHLConsumer.process("alpha");
     }
 
 }

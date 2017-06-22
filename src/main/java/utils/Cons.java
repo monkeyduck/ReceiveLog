@@ -31,5 +31,8 @@ public class Cons {
         uselessMethod.add("pictureCall");
         uselessMethod.add("pushGrowUpNotification");
         uselessMethod.add("sendGrowUpLog");
+        uselessMethod.add("nodeEnterIn");
+        uselessMethod.add("synthetic");
+        uselessMethod.add("talk");
     }
 }
